@@ -27,8 +27,14 @@ RUN \
     sed -i 's/^\(#?LoadModule mpm_prefork_module .*\)/#\1/' /etc/apache2/httpd.conf && \
     sed -i 's/^\(user = \).*/\1apache/' /etc/php81/php-fpm.d/www.conf && \
     sed -i 's/^\(group = \).*/\1apache/' /etc/php81/php-fpm.d/www.conf && \
-    echo $'<FilesMatch \.php$>\n\
-    SetHandler "proxy:fcgi://127.0.0.1:9000"\n\
+    sed -i 's|^\(listen = \).*|\1/run/php-fpm/www.sock|' /etc/php81/php-fpm.d/www.conf && \
+    sed -i 's/^;\?\(listen\.owner = \).*/\1apache/' /etc/php81/php-fpm.d/www.conf && \
+    sed -i 's/^;\?\(listen\.group = \).*/\1apache/' /etc/php81/php-fpm.d/www.conf && \
+    echo $'<Proxy "unix:/run/php-fpm/www.sock|fcgi://php-fpm">\n\
+    ProxySet disablereuse=off\n\
+</Proxy>\n\
+<FilesMatch \.php$>\n\
+    SetHandler "proxy:fcgi://php-fpm"\n\
 </FilesMatch>\n\
 DirectoryIndex index.php index.html' >/etc/apache2/conf.d/php81-module.conf && \
     ln -sf /etc/zm/www/zoneminder.conf /etc/apache2/conf.d && \
@@ -51,7 +57,8 @@ DirectoryIndex index.php index.html' >/etc/apache2/conf.d/php81-module.conf && \
     rm -rf /etc/apk /lib/apk /usr/lib/apk /usr/share/apk /var/lib/apk && \
     rm -rf /var/cache/apk/* && \
     rm -rf /tmp/* /var/tmp/* /run/* /dev/shm/* && \
-    install -m 750 -o apache -g apache -d /run/apache2
+    install -m 750 -o apache -g apache -d /run/apache2 && \
+    install -m 750 -o apache -g apache -d /run/php-fpm
 
 VOLUME /var/lib/zoneminder/events /var/lib/mysql /var/log/zoneminder
 
