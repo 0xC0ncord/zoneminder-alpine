@@ -38,6 +38,9 @@ RUN \
 </FilesMatch>\n\
 DirectoryIndex index.php index.html' >/etc/apache2/conf.d/php81-module.conf && \
     ln -sf /etc/zm/www/zoneminder.conf /etc/apache2/conf.d && \
+    sed -i 's/^\(Listen \).*/\18443/' /etc/apache2/conf.d/ssl.conf && \
+    sed -i 's/^\(<VirtualHost _default_:\)\d\+\(.*\)/\18443\2/' /etc/apache2/conf.d/ssl.conf && \
+    sed -i 's/^\(ServerName www\.example\.com:\)\d\+/\18443/' /etc/apache2/conf.d/ssl.conf && \
     echo "ServerName localhost" >/etc/apache2/conf.d/servername.conf && \
     echo -e "# Redirect the webroot to /zm\nRedirectMatch permanent ^/$ /zm" \
         >/etc/apache2/conf.d/redirect.conf && \
@@ -62,7 +65,7 @@ DirectoryIndex index.php index.html' >/etc/apache2/conf.d/php81-module.conf && \
 
 VOLUME /var/lib/zoneminder/events /var/lib/mysql /var/log/zoneminder
 
-EXPOSE 443
+EXPOSE 8443
 
 CMD ["/bin/sh"]
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
